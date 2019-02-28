@@ -47,7 +47,9 @@ public class RemotingServerTest {
 
     public static RemotingServer createRemotingServer() throws InterruptedException {
         NettyServerConfig config = new NettyServerConfig();
+        // 初始化RemotingServer,此处的逻辑与RemotingClient大体相当
         RemotingServer remotingServer = new NettyRemotingServer(config);
+        // 注册一个处理器,根据requestCode,获取处理器,处理请求
         remotingServer.registerProcessor(0, new NettyRequestProcessor() {
             @Override
             public RemotingCommand processRequest(ChannelHandlerContext ctx, RemotingCommand request) {
@@ -61,15 +63,22 @@ public class RemotingServerTest {
             }
         }, Executors.newCachedThreadPool());
 
+        // 启动RemotingServer
         remotingServer.start();
 
         return remotingServer;
     }
 
     public static RemotingClient createRemotingClient() {
+        // 使用默认的NettyClientConfig配置
         return createRemotingClient(new NettyClientConfig());
     }
 
+    /**
+     * 实例化RemotingClient实例,之后启动并返回client对象
+     * @param nettyClientConfig
+     * @return
+     */
     public static RemotingClient createRemotingClient(NettyClientConfig nettyClientConfig) {
         RemotingClient client = new NettyRemotingClient(nettyClientConfig);
         client.start();
@@ -91,10 +100,15 @@ public class RemotingServerTest {
     @Test
     public void testInvokeSync() throws InterruptedException, RemotingConnectException,
         RemotingSendRequestException, RemotingTimeoutException {
+
+        // 消息头
         RequestHeader requestHeader = new RequestHeader();
         requestHeader.setCount(1);
         requestHeader.setMessageTitle("Welcome");
+
+        // 构建请求
         RemotingCommand request = RemotingCommand.createRequestCommand(0, requestHeader);
+        // 同步发送消息
         RemotingCommand response = remotingClient.invokeSync("localhost:8888", request, 1000 * 3);
         assertTrue(response != null);
         assertThat(response.getLanguage()).isEqualTo(LanguageCode.JAVA);

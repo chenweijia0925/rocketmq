@@ -144,6 +144,8 @@ public class RemotingCommand {
     public static RemotingCommand decode(final ByteBuffer byteBuffer) {
         int length = byteBuffer.limit();
         int oriHeaderLen = byteBuffer.getInt();
+
+        // 计算消息长度
         int headerLength = getHeaderLength(oriHeaderLen);
 
         byte[] headerData = new byte[headerLength];
@@ -327,33 +329,45 @@ public class RemotingCommand {
 
     public ByteBuffer encode() {
         // 1> header length size
-        int length = 4;
+        int length = 4; //消息总长度
 
         // 2> header data length
+        // 将消息头编码成byte[]
         byte[] headerData = this.headerEncode();
+        // 计算头部长度
         length += headerData.length;
 
         // 3> body data length
         if (this.body != null) {
+            // 消息主体长度
             length += body.length;
         }
 
+        /*
+        分配ByteBuffer,这边加了4
+        这是因为在消息总长度的计算中没有将存储头部长度的4个字节计算在内
+         */
         ByteBuffer result = ByteBuffer.allocate(4 + length);
 
         // length
+        // 将消息总长度放入buffer
         result.putInt(length);
 
         // header length
+        // 将消息头部长度放入ByteBuffer
         result.put(markProtocolType(headerData.length, serializeTypeCurrentRPC));
 
         // header data
+        // 将头部数据放入ByteBuffer
         result.put(headerData);
 
         // body data;
         if (this.body != null) {
+            // 将消息主体放入ByteBuffer
             result.put(this.body);
         }
 
+        // 重置ByteBuffer的position位置
         result.flip();
 
         return result;
