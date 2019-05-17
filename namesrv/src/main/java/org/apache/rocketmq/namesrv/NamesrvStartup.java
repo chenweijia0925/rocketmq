@@ -41,6 +41,15 @@ import org.apache.rocketmq.srvutil.ServerUtil;
 import org.apache.rocketmq.srvutil.ShutdownHookThread;
 import org.slf4j.LoggerFactory;
 
+/**
+ * 说明:NameServer启动类
+ * <br>@author ChenWeiJia
+ * <br>@date 2019-02-28 17:01
+ *
+ * <br>UpdateNote:
+ * <br>UpdateTime:
+ * <br>UpdateUser:
+ */
 public class NamesrvStartup {
 
     private static InternalLogger log;
@@ -53,8 +62,15 @@ public class NamesrvStartup {
 
     public static NamesrvController main0(String[] args) {
 
+        /*
+        main0方法主要完成两个工作:
+        1、解析命令行参数
+         */
+
         try {
+            // 创建NameServerController实例对象
             NamesrvController controller = createNamesrvController(args);
+
             start(controller);
             String tip = "The Name Server boot success. serializeType=" + RemotingCommand.getSerializeTypeConfigInThisServer();
             log.info(tip);
@@ -69,17 +85,21 @@ public class NamesrvStartup {
     }
 
     public static NamesrvController createNamesrvController(String[] args) throws IOException, JoranException {
+        // 设置rocketMq版本号
         System.setProperty(RemotingCommand.REMOTING_VERSION_KEY, Integer.toString(MQVersion.CURRENT_VERSION));
         //PackageConflictDetect.detectFastjson();
 
         Options options = ServerUtil.buildCommandlineOptions(new Options());
+
         commandLine = ServerUtil.parseCmdLine("mqnamesrv", args, buildCommandlineOptions(options), new PosixParser());
         if (null == commandLine) {
             System.exit(-1);
             return null;
         }
 
+        // nameServer配置
         final NamesrvConfig namesrvConfig = new NamesrvConfig();
+        // NettyServer配置
         final NettyServerConfig nettyServerConfig = new NettyServerConfig();
         nettyServerConfig.setListenPort(9876);
         if (commandLine.hasOption('c')) {
@@ -123,6 +143,7 @@ public class NamesrvStartup {
         MixAll.printObjectProperties(log, namesrvConfig);
         MixAll.printObjectProperties(log, nettyServerConfig);
 
+        // NamesrvController是Name Server真正的核心类
         final NamesrvController controller = new NamesrvController(namesrvConfig, nettyServerConfig);
 
         // remember all configs to prevent discard
@@ -137,12 +158,14 @@ public class NamesrvStartup {
             throw new IllegalArgumentException("NamesrvController is null");
         }
 
+        // NamesrvController初始化
         boolean initResult = controller.initialize();
         if (!initResult) {
             controller.shutdown();
             System.exit(-3);
         }
 
+        // 添加java虚拟机关闭时的hook
         Runtime.getRuntime().addShutdownHook(new ShutdownHookThread(log, new Callable<Void>() {
             @Override
             public Void call() throws Exception {
@@ -151,6 +174,7 @@ public class NamesrvStartup {
             }
         }));
 
+        // NameServerController启动
         controller.start();
 
         return controller;

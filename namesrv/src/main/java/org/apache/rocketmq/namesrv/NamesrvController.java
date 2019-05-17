@@ -64,6 +64,7 @@ public class NamesrvController {
         this.namesrvConfig = namesrvConfig;
         this.nettyServerConfig = nettyServerConfig;
         this.kvConfigManager = new KVConfigManager(this);
+        // 创建RouteInfoManager对象,这是nameServer中最重要的类,所有的topic和Broker信息都保存在RouteInfoManager中.
         this.routeInfoManager = new RouteInfoManager();
         this.brokerHousekeepingService = new BrokerHousekeepingService(this);
         this.configuration = new Configuration(
@@ -73,15 +74,22 @@ public class NamesrvController {
         this.configuration.setStorePathFromConfig(this.namesrvConfig, "configStorePath");
     }
 
+    /**
+     * NameServerController初始化方法
+     * @return
+     */
     public boolean initialize() {
 
+        // kvConfigManager是nameserver里管理kv的一个组件
         this.kvConfigManager.load();
 
+        // 启动一个NettyRemotingServer实例
         this.remotingServer = new NettyRemotingServer(this.nettyServerConfig, this.brokerHousekeepingService);
 
         this.remotingExecutor =
             Executors.newFixedThreadPool(nettyServerConfig.getServerWorkerThreads(), new ThreadFactoryImpl("RemotingExecutorThread_"));
 
+        // 注册处理请求的processor
         this.registerProcessor();
 
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
@@ -143,7 +151,7 @@ public class NamesrvController {
 
     private void registerProcessor() {
         if (namesrvConfig.isClusterTest()) {
-
+            //ClusterTestRequestProcessor与DefaultRequestProcessor的区别在于ClusterTestRequestProcessor无法从本地读取路由信息时会从集群中读取
             this.remotingServer.registerDefaultProcessor(new ClusterTestRequestProcessor(this, namesrvConfig.getProductEnvName()),
                 this.remotingExecutor);
         } else {
