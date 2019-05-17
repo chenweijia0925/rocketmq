@@ -49,9 +49,28 @@ public class RouteInfoManager {
     private static final InternalLogger log = InternalLoggerFactory.getLogger(LoggerName.NAMESRV_LOGGER_NAME);
     private final static long BROKER_CHANNEL_EXPIRED_TIME = 1000 * 60 * 2;
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
+
+    /**存储所有topic的属性信息,key为topic名称,value为QueueData队列,
+     * 队列长度等于topic数据存储的master broker的个数,QueueData里存着broker的名称、
+     * 读写queue数量，同步标识等
+     * */
     private final HashMap<String/* topic */, List<QueueData>> topicQueueTable;
+
+    /**
+     *以broker name为索引,相同名称的broker可能存在多台机器,一个master多个slave
+     * 这个结构存储着一个BrokerName对应的属性信息,包括所属的cluster名称,一个 master broker和多个 slave broker的地址信息
+     */
     private final HashMap<String/* brokerName */, BrokerData> brokerAddrTable;
+
+    /**
+     * 一个cluster名称对应一个由brokerName组成的集合
+     */
     private final HashMap<String/* clusterName */, Set<String/* brokerName */>> clusterAddrTable;
+
+    /**
+     * key是brokerAddr,也就是对应一台机器,BrokerLiveInfo存储的是这台broker机器的实时状态,
+     * 包括上次更新的时间戳,超过没有更新就认为这个broker无效了,将其从Broker列表移除
+     */
     private final HashMap<String/* brokerAddr */, BrokerLiveInfo> brokerLiveTable;
     private final HashMap<String/* brokerAddr */, List<String>/* Filter Server */> filterServerTable;
 

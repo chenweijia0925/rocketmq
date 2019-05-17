@@ -64,7 +64,8 @@ public class NamesrvStartup {
 
         /*
         main0方法主要完成两个工作:
-        1、解析命令行参数
+        1、解析命令行参数，重点是解析-c和-p参数
+        2、初始化controller
          */
 
         try {
@@ -89,6 +90,7 @@ public class NamesrvStartup {
         System.setProperty(RemotingCommand.REMOTING_VERSION_KEY, Integer.toString(MQVersion.CURRENT_VERSION));
         //PackageConflictDetect.detectFastjson();
 
+        // 构建命令行参数
         Options options = ServerUtil.buildCommandlineOptions(new Options());
 
         commandLine = ServerUtil.parseCmdLine("mqnamesrv", args, buildCommandlineOptions(options), new PosixParser());
@@ -102,6 +104,8 @@ public class NamesrvStartup {
         // NettyServer配置
         final NettyServerConfig nettyServerConfig = new NettyServerConfig();
         nettyServerConfig.setListenPort(9876);
+
+        // 解析-c参数 用来指定配置文件存储的位置
         if (commandLine.hasOption('c')) {
             String file = commandLine.getOptionValue('c');
             if (file != null) {
@@ -118,6 +122,7 @@ public class NamesrvStartup {
             }
         }
 
+        // 解析-p参数 用来打印所有配置项的值
         if (commandLine.hasOption('p')) {
             InternalLogger console = InternalLoggerFactory.getLogger(LoggerName.NAMESRV_CONSOLE_NAME);
             MixAll.printObjectProperties(console, namesrvConfig);

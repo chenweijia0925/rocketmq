@@ -86,12 +86,14 @@ public class NamesrvController {
         // 启动一个NettyRemotingServer实例
         this.remotingServer = new NettyRemotingServer(this.nettyServerConfig, this.brokerHousekeepingService);
 
+         // 初始化线程池,默认是8个线程
         this.remotingExecutor =
             Executors.newFixedThreadPool(nettyServerConfig.getServerWorkerThreads(), new ThreadFactoryImpl("RemotingExecutorThread_"));
 
         // 注册处理请求的processor
         this.registerProcessor();
 
+        // 用刚初始化的线程池，初始化定时线程，用来扫描失效的broker
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
 
             @Override
@@ -100,6 +102,7 @@ public class NamesrvController {
             }
         }, 5, 10, TimeUnit.SECONDS);
 
+        // 用刚初始化的线程池，初始化定时线程，打印配置信息
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
 
             @Override

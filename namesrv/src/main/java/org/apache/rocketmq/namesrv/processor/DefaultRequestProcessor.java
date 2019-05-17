@@ -57,6 +57,15 @@ import org.apache.rocketmq.remoting.exception.RemotingCommandException;
 import org.apache.rocketmq.remoting.netty.NettyRequestProcessor;
 import org.apache.rocketmq.remoting.protocol.RemotingCommand;
 
+/**
+ * 说明:nameServer核心业务处理逻辑
+ * <br>@author ChenWeiJia
+ * <br>@date 2019-05-17 16:05
+ *
+ * <br>UpdateNote:
+ * <br>UpdateTime:
+ * <br>UpdateUser:
+ */
 public class DefaultRequestProcessor implements NettyRequestProcessor {
     private static InternalLogger log = InternalLoggerFactory.getLogger(LoggerName.NAMESRV_LOGGER_NAME);
 
